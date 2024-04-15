@@ -1,0 +1,43 @@
+RewriteEngine On
+RewriteBase /
+AddDefaultCharset UTF-8
+Options +FollowSymlinks
+
+ErrorDocument 404 /404.php
+
+# --------- /bot/[bot_id](_[ref_id])
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteRule ^bot([\d]+)(_([_@.0-9a-zA-Z]+))?$ index.php?id=$1&ref=$3 [QSA,L]
+# --------- /chat/[bot_id](_[ref_id])
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteRule ^chat([\d]+)(_([_@.0-9a-zA-Z]+))?$ bot.php?id=$1&ref=$3 [QSA,L]
+
+# --------- URL without index.php if http
+RewriteCond %{THE_REQUEST} ^.*/index.php
+RewriteCond %{HTTPS} off
+RewriteRule ^(.*)index.php$ http://%{HTTP_HOST}/$1 [QSA,R=301]
+# --------- URL without index.php if https
+RewriteCond %{THE_REQUEST} ^.*/index.php
+RewriteCond %{HTTPS} on
+RewriteRule ^(.*)index.php$ https://%{HTTP_HOST}/$1 [QSA,R=301]
+
+# --------- Redirect to https
+#RewriteCond %{HTTP_HOST} !(.loc)$
+#RewriteCond %{HTTP_HOST} !(.tech)$
+#RewriteCond %{HTTPS} off
+#RewriteCond %{HTTP:X-Forwarded-Proto} !https
+#RewriteRule ^(.*)$ https://%{HTTP_HOST}%{REQUEST_URI} [QSA,L,R=301]
+
+# --------- Заголовок Cache-Control (1-й метод очистки кэша)
+<IfModule mod_headers.c>
+	Header append Cache-Control "no-store, no-cache, must-revalidate"
+</IfModule>
+# --------- Заголовок Expires (2-й метод очистки кэша)
+<IfModule mod_expires.c>
+	ExpiresActive On ExpiresDefault "now"
+</IfModule>
+
+# Для удаления заголовка X-PHP-Originating-Script чтобы обойти СПАМ-оборону почтового агрегатора
+php_flag mail.add_x_header Off
